@@ -1,6 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const THEMES = window.READARK.THEMES;
   const container = document.getElementById('themeContainer');
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tab.id;
 
   const groups = [
     { key: 'dark', label: 'Dark Themes' },
@@ -59,7 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = e.target.closest('.theme-item');
     if (!item) return;
     const key = item.dataset.theme;
-    chrome.storage.sync.set({ theme: key });
+    chrome.storage.sync.set({ theme: key }, () => {
+      chrome.tabs.reload(tabId);
+    });
     highlightTheme(key);
   });
 });
