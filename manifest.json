@@ -9,7 +9,7 @@
     {
       "all_frames": true,
       "matches": ["*://*/*"],
-      "js": ["check.js"]
+      "js": ["themes.js", "check.js"]
     }
   ],
   "action": {
