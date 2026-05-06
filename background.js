@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const groups = [
     { key: 'dark', label: 'Dark Themes' },
-    { key: 'light', label: 'Light Themes' }
+    { key: 'light', label: 'Light Themes' },
+    { key: 'eink', label: 'E-Ink Screens' }
   ];
 
   groups.forEach(({ key, label }) => {

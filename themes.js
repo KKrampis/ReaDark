@@ -129,6 +129,24 @@ window.READARK.THEMES = {
     text: '#383a42', text2: '#9d9d9f',
     accent: '#e45649', link: '#4078f2',
     border: '#d3d3d3', input: '#f0f0f0', selection: '#e5e5e6'
+  },
+
+  // ── E-Ink themes ──────────────────────────────────────────────
+  eink: {
+    name: 'E-Ink',
+    group: 'eink',
+    bg: '#f0f0f0', bg2: '#e0e0e0', bg3: '#d0d0d0',
+    text: '#111111', text2: '#444444',
+    accent: '#333333', link: '#1a1a8c',
+    border: '#bbbbbb', input: '#e8e8e8', selection: '#c0c0c0'
+  },
+  einkwarm: {
+    name: 'E-Ink Warm',
+    group: 'eink',
+    bg: '#f5edd8', bg2: '#ede0c4', bg3: '#e2d4b8',
+    text: '#2c1f14', text2: '#6b5a48',
+    accent: '#6b3a1f', link: '#1a3a7a',
+    border: '#c8b89a', input: '#ede0c4', selection: '#d4c4a8'
   }
 };
 
