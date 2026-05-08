@@ -1,10 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const THEMES = window.READARK.THEMES;
   const container = document.getElementById('themeContainer');
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabId = tab.id;
 
-  // ── Render theme list ────────────────────────────────────────
+  // ── Render theme list (before any async calls) ───────────────
   const groups = [
     { key: 'dark',  label: 'Dark Themes' },
     { key: 'light', label: 'Light Themes' }
@@ -63,10 +61,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     highlightTheme(d.theme || '');
   });
 
+  // ── Get tab id (only needed for reload/scripting) ────────────
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tab?.id;
+
   // ── Global ON/OFF (reloads page) ─────────────────────────────
   globalBtn.addEventListener('click', () => {
     chrome.storage.sync.get('globalEnabled', (d) => {
-      const turningOff = d.globalEnabled !== false; // currently ON → turn OFF
+      const turningOff = d.globalEnabled !== false;
       const next = !turningOff;
       setGlobalBtn(next);
       chrome.storage.sync.set({ globalEnabled: next }, () => {
@@ -78,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // ── Theme selection (live, no reload) ───────────────────────
+  // ── Theme selection (live, no reload) ────────────────────────
   container.addEventListener('click', (e) => {
     const item = e.target.closest('.theme-item');
     if (!item) return;
