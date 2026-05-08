@@ -56,9 +56,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     globalBtn.className = 'global-btn ' + (on ? 'on' : 'off');
   };
 
-  chrome.storage.sync.get(['theme', 'globalEnabled'], (d) => {
-    setGlobalBtn(d.globalEnabled !== false);
-    highlightTheme(d.theme || '');
+  chrome.storage.sync.get(['theme', 'savedTheme'], (d) => {
+    setGlobalBtn(!!d.theme);
+    highlightTheme(d.theme || d.savedTheme || '');
   });
 
   // ── Get tab id (only needed for reload/scripting) ────────────
@@ -67,16 +67,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Global ON/OFF (reloads page) ─────────────────────────────
   globalBtn.addEventListener('click', () => {
-    chrome.storage.sync.get('globalEnabled', (d) => {
-      const turningOff = d.globalEnabled !== false;
-      const next = !turningOff;
-      setGlobalBtn(next);
-      chrome.storage.sync.set({ globalEnabled: next }, () => {
-        chrome.scripting.executeScript({
-          target: { tabId, allFrames: true },
-          func: () => { document.getElementById('readark-theme-4530')?.remove(); }
-        }).catch(() => {}).then(() => chrome.tabs.reload(tabId));
-      });
+    chrome.storage.sync.get(['theme', 'savedTheme'], (d) => {
+      const isOn = !!d.theme;
+      if (isOn) {
+        // Turning OFF: save theme, clear it
+        setGlobalBtn(false);
+        chrome.storage.sync.set({ savedTheme: d.theme, theme: '' }, () => {
+          chrome.scripting.executeScript({
+            target: { tabId, allFrames: true },
+            func: () => { document.getElementById('readark-theme-4530')?.remove(); }
+          }).catch(() => {}).then(() => chrome.tabs.reload(tabId));
+        });
+      } else {
+        // Turning ON: restore saved theme
+        const restore = d.savedTheme || '';
+        setGlobalBtn(!!restore);
+        chrome.storage.sync.set({ theme: restore }, () => {
+          chrome.tabs.reload(tabId);
+        });
+      }
     });
   });
 
@@ -86,6 +95,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!item) return;
     const key = item.dataset.theme;
     highlightTheme(key);
-    chrome.storage.sync.set({ theme: key, globalEnabled: true });
+    chrome.storage.sync.set({ theme: key, savedTheme: key });
   });
 });
