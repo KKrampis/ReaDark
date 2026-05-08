@@ -1,143 +1,89 @@
-const getTabId = async () => {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    return tabs[0].id;
-};
+document.addEventListener('DOMContentLoaded', async () => {
+  const THEMES = window.READARK.THEMES;
+  const container = document.getElementById('themeContainer');
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tab.id;
 
-document.addEventListener("DOMContentLoaded", async () => {
-    const tabId = await getTabId();
+  // ── Render theme list ────────────────────────────────────────
+  const groups = [
+    { key: 'dark',  label: 'Dark Themes' },
+    { key: 'light', label: 'Light Themes' }
+  ];
 
-    chrome.scripting.executeScript({
-        target: { tabId: tabId, allFrames: true },
-        files: ["overlay.js"],
-    });
+  groups.forEach(({ key, label }) => {
+    const entries = Object.entries(THEMES).filter(([, t]) => t.group === key);
+    if (!entries.length) return;
 
-    chrome.storage.sync.get("overlay", (data) => {
-        if (data.overlay == 1) {
-            document.getElementById("readingCheckBox").checked = true;
-        } else {
-            chrome.storage.sync.set({ overlay: 0 });
-            document.getElementById("readingCheckBox").checked = false;
-        }
-    });
-    chrome.storage.sync.get("dark", (data) => {
-        if (data.dark == 1) {
-            document.getElementById("darkCheckBox").checked = true;
-        } else {
-            chrome.storage.sync.set({ dark: 0 });
-            document.getElementById("darkCheckBox").checked = false;
-        }
-    });
+    const heading = document.createElement('div');
+    heading.className = 'group-label';
+    heading.textContent = label;
+    container.appendChild(heading);
 
-    const link = document.getElementById("readingCheckBox");
-    link.addEventListener("click", () => {
-        if (document.getElementById("readingCheckBox").checked) {
-            chrome.storage.sync.get("overlay", (data) => {
-                if (data.overlay == 0) {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => {
-                            if (!document.getElementById("overlay4530")) {
-                                document.body.appendChild(div);
-                            }
-                        },
-                    });
-                }
-                chrome.storage.sync.set({ overlay: 1 });
-            });
-        } else {
-            chrome.storage.sync.get("overlay", (data) => {
-                if (data.overlay == 1) {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => {
-                            if (document.getElementById("overlay4530")) {
-                                document.getElementById("overlay4530").remove();
-                            }
-                        },
-                    });
-                }
-                chrome.storage.sync.set({ overlay: 0 });
-            });
-        }
-    });
+    entries.forEach(([themeKey, theme]) => {
+      const item = document.createElement('div');
+      item.className = 'theme-item';
+      item.dataset.theme = themeKey;
 
-    const link2 = document.getElementById("darkCheckBox");
-    link2.addEventListener("click", () => {
-        if (document.getElementById("darkCheckBox").checked) {
-            chrome.storage.sync.get("dark", (data) => {
-                if (data.dark == 0) {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => (document.documentElement.style.filter = "invert(1)"),
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () =>
-                            (document.documentElement.style.backgroundColor = "black"),
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () =>
-                        (document.documentElement.style.height =
-                            Math.max(
-                                document.body.scrollHeight,
-                                document.body.offsetHeight,
-                                document.documentElement.clientHeight,
-                                document.documentElement.scrollHeight,
-                                document.documentElement.offsetHeight
-                            ) + "px"),
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => {
-                            for (let i = 0; i < document.images.length; i++) {
-                                document.images[i].style.filter = "invert(1)";
-                            }
-                        },
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => {
-                            let x = document.querySelectorAll("video");
-                            for (let i = 0; i < x.length; i++) {
-                                x[i].style.filter = "invert(1)";
-                            }
-                        },
-                    });
-                }
-                chrome.storage.sync.set({ dark: 1 });
-            });
-        } else {
-            chrome.storage.sync.get("dark", (data) => {
-                if (data.dark == 1) {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => (document.documentElement.style.filter = "invert(0)"),
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => (document.documentElement.style.backgroundColor = ""),
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => {
-                            for (let i = 0; i < document.images.length; i++) {
-                                document.images[i].style.filter = "invert(0)";
-                            }
-                        },
-                    });
-                    chrome.scripting.executeScript({
-                        target: { tabId: tabId, allFrames: true },
-                        func: () => {
-                            let x = document.querySelectorAll("video");
-                            for (let i = 0; i < x.length; i++) {
-                                x[i].style.filter = "invert(0)";
-                            }
-                        },
-                    });
-                }
-                chrome.storage.sync.set({ dark: 0 });
-            });
-        }
+      const swatch = document.createElement('div');
+      swatch.className = 'theme-swatch';
+      swatch.style.background =
+        `linear-gradient(135deg, ${theme.bg} 50%, ${theme.accent || theme.link || '#888'} 50%)`;
+
+      const name = document.createElement('span');
+      name.className = 'theme-name';
+      name.textContent = theme.name;
+
+      const dot = document.createElement('span');
+      dot.className = 'theme-dot';
+      dot.textContent = '●';
+
+      item.appendChild(swatch);
+      item.appendChild(name);
+      item.appendChild(dot);
+      container.appendChild(item);
     });
+  });
+
+  const highlightTheme = (key) => {
+    document.querySelectorAll('.theme-item').forEach((el) => {
+      el.classList.toggle('selected', el.dataset.theme === key);
+    });
+  };
+
+  // ── Load saved state ─────────────────────────────────────────
+  const globalBtn = document.getElementById('globalBtn');
+
+  const setGlobalBtn = (on) => {
+    globalBtn.textContent = on ? 'ON' : 'OFF';
+    globalBtn.className = 'global-btn ' + (on ? 'on' : 'off');
+  };
+
+  chrome.storage.sync.get(['theme', 'globalEnabled'], (d) => {
+    setGlobalBtn(d.globalEnabled !== false);
+    highlightTheme(d.theme || '');
+  });
+
+  // ── Global ON/OFF (reloads page) ─────────────────────────────
+  globalBtn.addEventListener('click', () => {
+    chrome.storage.sync.get('globalEnabled', (d) => {
+      const turningOff = d.globalEnabled !== false; // currently ON → turn OFF
+      const next = !turningOff;
+      setGlobalBtn(next);
+      chrome.storage.sync.set({ globalEnabled: next }, () => {
+        chrome.scripting.executeScript({
+          target: { tabId, allFrames: true },
+          func: () => { document.getElementById('readark-theme-4530')?.remove(); }
+        }).catch(() => {}).then(() => chrome.tabs.reload(tabId));
+      });
+    });
+  });
+
+  // ── Theme selection (live, no reload) ───────────────────────
+  container.addEventListener('click', (e) => {
+    const item = e.target.closest('.theme-item');
+    if (!item) return;
+    const key = item.dataset.theme;
+    highlightTheme(key);
+    chrome.storage.sync.set({ theme: key, globalEnabled: true });
+  });
 });
