@@ -19,12 +19,30 @@ const applyTheme = (themeKey) => {
   document.documentElement.appendChild(style);
 };
 
-chrome.storage.sync.get('theme', (data) => {
-  applyTheme(data.theme);
+const hostname = location.hostname;
+
+const isDisabled = (list) => list.includes(hostname);
+
+chrome.storage.local.get('disabledHosts', (local) => {
+  if (isDisabled(local.disabledHosts || [])) return;
+  chrome.storage.sync.get('theme', (sync) => applyTheme(sync.theme));
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync' && changes.theme !== undefined) {
-    applyTheme(changes.theme.newValue);
+    chrome.storage.local.get('disabledHosts', (local) => {
+      if (!isDisabled(local.disabledHosts || [])) {
+        applyTheme(changes.theme.newValue);
+      }
+    });
+  }
+  if (area === 'local' && changes.disabledHosts !== undefined) {
+    const disabled = isDisabled(changes.disabledHosts.newValue || []);
+    if (disabled) {
+      const existing = document.getElementById(READARK_STYLE_ID);
+      if (existing) existing.remove();
+    } else {
+      chrome.storage.sync.get('theme', (sync) => applyTheme(sync.theme));
+    }
   }
 });
