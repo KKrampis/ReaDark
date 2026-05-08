@@ -119,11 +119,19 @@ window.READARK.THEMES = {
 };
 
 window.READARK.buildThemeCSS = function(t) {
+  const host = window.location.hostname;
+  const skipDivBg = host === 'docs.google.com' || host === 'sheets.google.com' ||
+                    host === 'slides.google.com' || host === 'drive.google.com';
+  const divRule = skipDivBg ? '' : `div {
+  background-color: ${t.bg} !important;
+  color: ${t.text} !important;
+}`;
   return `
 html, body {
   background-color: ${t.bg} !important;
   color: ${t.text} !important;
 }
+${divRule}
 section, article, aside, main, header, footer, nav, form,
 table, thead, tbody, tfoot, tr, th, td,
 ul, ol, li, dl, dt, dd,
