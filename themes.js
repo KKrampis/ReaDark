@@ -117,7 +117,6 @@ ul, ol, li, dl, dt, dd,
 details, summary, figure, figcaption, dialog, menu {
   background-color: ${t.bg} !important;
   color: ${t.text} !important;
-  border-color: ${t.border} !important;
 }
 h1, h2, h3, h4, h5, h6, p, span, label, legend, caption,
 blockquote, cite, q, strong, em, small, mark, del, ins, sub, sup, time, address {
