@@ -73,10 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Turning OFF: save theme, clear it
         setGlobalBtn(false);
         chrome.storage.sync.set({ savedTheme: d.theme, theme: '' }, () => {
-          chrome.scripting.executeScript({
-            target: { tabId, allFrames: true },
-            func: () => { document.getElementById('readark-theme-4530')?.remove(); }
-          }).catch(() => {}).then(() => chrome.tabs.reload(tabId));
+          chrome.tabs.reload(tabId);
         });
       } else {
         // Turning ON: restore saved theme

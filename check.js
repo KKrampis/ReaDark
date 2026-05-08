@@ -1,8 +1,10 @@
-const READARK_STYLE_ID = 'readark-theme-4530';
+let _sheet = null;
 
 const removeTheme = () => {
-  const el = document.getElementById(READARK_STYLE_ID);
-  if (el) el.remove();
+  if (_sheet) {
+    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(s => s !== _sheet);
+    _sheet = null;
+  }
 };
 
 const applyTheme = (themeKey) => {
@@ -13,13 +15,11 @@ const applyTheme = (themeKey) => {
   const t = themes[themeKey];
   if (!t || !t.bg) { removeTheme(); return; }
 
-  let style = document.getElementById(READARK_STYLE_ID);
-  if (!style) {
-    style = document.createElement('style');
-    style.id = READARK_STYLE_ID;
-    document.documentElement.appendChild(style);
+  if (!_sheet) {
+    _sheet = new CSSStyleSheet();
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, _sheet];
   }
-  style.textContent = buildCSS(t);
+  _sheet.replaceSync(buildCSS(t));
 };
 
 chrome.storage.sync.get('theme', (d) => applyTheme(d.theme || ''));
