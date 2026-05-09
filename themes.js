@@ -120,56 +120,66 @@ window.READARK.THEMES = {
 
 window.READARK.buildThemeCSS = function(t) {
   const host = window.location.hostname;
-  const skipDivBg = host === 'docs.google.com' || host === 'sheets.google.com' ||
-                    host === 'slides.google.com' || host === 'drive.google.com';
-  const divRule = skipDivBg ? '' : `div {
-  background-color: ${t.bg} !important;
-  color: ${t.text} !important;
-}`;
+  const skipDiv = host === 'docs.google.com' || host === 'sheets.google.com' ||
+                  host === 'slides.google.com' || host === 'drive.google.com';
+
+  // :not(#readark-x) boosts specificity to (1,0,1), beating .class rules with !important
+  const X = ':not(#readark-x)';
+  const bgTags = [
+    'section','article','aside','main','header','footer','nav','form',
+    'table','thead','tbody','tfoot','tr','th','td',
+    'ul','ol','li','dl','dt','dd',
+    'details','summary','figure','figcaption','dialog','menu'
+  ];
+  if (!skipDiv) bgTags.unshift('div');
+  const bgSel = bgTags.map(tag => `${X} ${tag}`).join(',');
+
+  const textTags = [
+    'h1','h2','h3','h4','h5','h6','p','span','label','legend','caption',
+    'blockquote','cite','q','strong','em','small','mark','del','ins',
+    'sub','sup','time','address'
+  ];
+  const textSel = textTags.map(tag => `${X} ${tag}`).join(',');
+
   return `
 html, body {
   background-color: ${t.bg} !important;
   color: ${t.text} !important;
 }
-${divRule}
-section, article, aside, main, header, footer, nav, form,
-table, thead, tbody, tfoot, tr, th, td,
-ul, ol, li, dl, dt, dd,
-details, summary, figure, figcaption, dialog, menu {
+${bgSel} {
   background-color: ${t.bg} !important;
   color: ${t.text} !important;
 }
-h1, h2, h3, h4, h5, h6, p, span, label, legend, caption,
-blockquote, cite, q, strong, em, small, mark, del, ins, sub, sup, time, address {
+${textSel} {
   color: ${t.text} !important;
   background-color: transparent !important;
 }
-a, a:link, a:visited { color: ${t.link} !important; }
-a:hover { opacity: 0.85 !important; }
-input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
-textarea, select {
+${X} a, ${X} a:link, ${X} a:visited { color: ${t.link} !important; }
+${X} a:hover { opacity: 0.85 !important; }
+${X} input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+${X} textarea, ${X} select {
   background-color: ${t.input} !important;
   color: ${t.text} !important;
   -webkit-text-fill-color: ${t.text} !important;
   border-color: ${t.border} !important;
 }
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
+${X} input:-webkit-autofill,
+${X} input:-webkit-autofill:hover,
+${X} input:-webkit-autofill:focus,
+${X} textarea:-webkit-autofill,
+${X} select:-webkit-autofill {
   -webkit-text-fill-color: ${t.text} !important;
   -webkit-box-shadow: 0 0 0px 1000px ${t.input} inset !important;
   caret-color: ${t.text} !important;
 }
-::placeholder { color: ${t.text2} !important; opacity: 0.8 !important; }
-button, [role=button], input[type=submit], input[type=button], input[type=reset] {
+${X} button, ${X} [role=button],
+${X} input[type=submit], ${X} input[type=button], ${X} input[type=reset] {
   background-color: ${t.bg2} !important;
   color: ${t.text} !important;
   -webkit-text-fill-color: ${t.text} !important;
   border-color: ${t.border} !important;
 }
-code, pre, kbd, samp {
+${X} code, ${X} pre, ${X} kbd, ${X} samp {
   background-color: ${t.bg2} !important;
   color: ${t.accent} !important;
   border-color: ${t.border} !important;
