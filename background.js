@@ -2,19 +2,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const THEMES = window.READARK.THEMES;
   const container = document.getElementById('themeContainer');
 
-  // ── Render theme list (before any async calls) ───────────────
-  const groups = [
-    { key: 'dark',  label: 'Dark Themes' },
-    { key: 'light', label: 'Light Themes' }
-  ];
-
-  groups.forEach(({ key, label }) => {
-    const entries = Object.entries(THEMES).filter(([, t]) => t.group === key);
-    if (!entries.length) return;
-
+  // ── Render theme list ─────────────────────────────────────────
+  const entries = Object.entries(THEMES).filter(([, t]) => t.group === 'dark');
+  if (entries.length) {
     const heading = document.createElement('div');
     heading.className = 'group-label';
-    heading.textContent = label;
+    heading.textContent = 'Dark Themes';
     container.appendChild(heading);
 
     entries.forEach(([themeKey, theme]) => {
@@ -40,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       item.appendChild(dot);
       container.appendChild(item);
     });
-  });
+  }
 
   const highlightTheme = (key) => {
     document.querySelectorAll('.theme-item').forEach((el) => {
@@ -48,35 +41,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // ── Load saved state ─────────────────────────────────────────
+  // ── Buttons ───────────────────────────────────────────────────
   const globalBtn = document.getElementById('globalBtn');
+  const pageBtn   = document.getElementById('pageBtn');
 
   const setGlobalBtn = (on) => {
     globalBtn.textContent = on ? 'ON' : 'OFF';
-    globalBtn.className = 'global-btn ' + (on ? 'on' : 'off');
+    globalBtn.className = 'toggle-btn global-btn ' + (on ? 'on' : 'off');
   };
 
-  chrome.storage.sync.get(['theme', 'savedTheme'], (d) => {
-    setGlobalBtn(!!d.theme);
-    highlightTheme(d.theme || d.savedTheme || '');
-  });
+  const setPageBtn = (on, globalOn) => {
+    pageBtn.textContent = on ? 'ON' : 'OFF';
+    pageBtn.className = 'toggle-btn page-btn ' + ((on && globalOn) ? 'on' : 'off');
+    pageBtn.disabled = !globalOn;
+  };
 
-  // ── Get tab id (only needed for reload/scripting) ────────────
+  // ── Get tab + host ────────────────────────────────────────────
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const tabId = tab?.id;
+  const host  = tab?.url?.startsWith('http') ? new URL(tab.url).hostname : null;
 
-  // ── Global ON/OFF (reloads page) ─────────────────────────────
+  if (!host) {
+    pageBtn.disabled = true;
+    pageBtn.textContent = 'N/A';
+    pageBtn.className = 'toggle-btn page-btn off';
+  }
+
+  // ── Load saved state ──────────────────────────────────────────
+  chrome.storage.sync.get(['theme', 'savedTheme'], (sd) => {
+    const globalOn = !!sd.theme;
+    setGlobalBtn(globalOn);
+    highlightTheme(sd.theme || sd.savedTheme || '');
+
+    if (host) {
+      chrome.storage.local.get('disabledHosts', (ld) => {
+        const disabled = ld.disabledHosts || [];
+        setPageBtn(!disabled.includes(host), globalOn);
+      });
+    }
+  });
+
+  // ── Global ON/OFF (reloads page) ──────────────────────────────
   globalBtn.addEventListener('click', () => {
     chrome.storage.sync.get(['theme', 'savedTheme'], (d) => {
       const isOn = !!d.theme;
       if (isOn) {
-        // Turning OFF: save theme, clear it
         setGlobalBtn(false);
         chrome.storage.sync.set({ savedTheme: d.theme, theme: '' }, () => {
           chrome.tabs.reload(tabId);
         });
       } else {
-        // Turning ON: restore saved theme
         const restore = d.savedTheme || '';
         setGlobalBtn(!!restore);
         chrome.storage.sync.set({ theme: restore }, () => {
@@ -86,12 +100,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // ── Theme selection (live, no reload) ────────────────────────
+  // ── Per-page ON/OFF (reloads page) ────────────────────────────
+  if (host) {
+    pageBtn.addEventListener('click', () => {
+      chrome.storage.local.get('disabledHosts', (ld) => {
+        const disabled = ld.disabledHosts || [];
+        const isDisabled = disabled.includes(host);
+        const updated = isDisabled
+          ? disabled.filter(h => h !== host)
+          : [...disabled, host];
+        chrome.storage.local.set({ disabledHosts: updated }, () => {
+          chrome.tabs.reload(tabId);
+        });
+      });
+    });
+  }
+
+  // ── Theme selection (live, no reload) ─────────────────────────
   container.addEventListener('click', (e) => {
     const item = e.target.closest('.theme-item');
     if (!item) return;
     const key = item.dataset.theme;
     highlightTheme(key);
     chrome.storage.sync.set({ theme: key, savedTheme: key });
+    setGlobalBtn(true);
   });
 });

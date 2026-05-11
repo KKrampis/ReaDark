@@ -82,40 +82,54 @@ window.READARK.THEMES = {
     accent: '#58a6ff', link: '#58a6ff',
     border: '#30363d', input: '#0d1117', selection: '#1f6feb'
   },
-
-  // ── Light themes ──────────────────────────────────────────────
-  githublight: {
-    name: 'GitHub Light',
-    group: 'light',
-    bg: '#ffffff', bg2: '#f6f8fa', bg3: '#eaeef2',
-    text: '#1f2328', text2: '#656d76',
-    accent: '#0550ae', link: '#0969da',
-    border: '#d0d7de', input: '#f6f8fa', selection: '#ddf4ff'
+  rosepine: {
+    name: 'Rosé Pine',
+    group: 'dark',
+    bg: '#191724', bg2: '#1f1d2e', bg3: '#26233a',
+    text: '#e0def4', text2: '#6e6a86',
+    accent: '#ebbcba', link: '#9ccfd8',
+    border: '#403d52', input: '#1f1d2e', selection: '#403d52'
   },
-  solarizedlight: {
-    name: 'Solarized Light',
-    group: 'light',
-    bg: '#fdf6e3', bg2: '#eee8d5', bg3: '#f5efdc',
-    text: '#657b83', text2: '#93a1a1',
-    accent: '#cb4b16', link: '#268bd2',
-    border: '#e0d9c4', input: '#eee8d5', selection: '#eee8d5'
+  everforest: {
+    name: 'Everforest Dark',
+    group: 'dark',
+    bg: '#2d353b', bg2: '#343f44', bg3: '#272e33',
+    text: '#d3c6aa', text2: '#859289',
+    accent: '#a7c080', link: '#7fbbb3',
+    border: '#475258', input: '#343f44', selection: '#475258'
   },
-  quietlight: {
-    name: 'Quiet Light',
-    group: 'light',
-    bg: '#f5f5f5', bg2: '#e8e8e8', bg3: '#d8d8d8',
-    text: '#333333', text2: '#777777',
-    accent: '#aa0000', link: '#0000cc',
-    border: '#cccccc', input: '#e8e8e8', selection: '#c0d0e8'
+  nightowl: {
+    name: 'Night Owl',
+    group: 'dark',
+    bg: '#011627', bg2: '#0d2a3e', bg3: '#010e1a',
+    text: '#d6deeb', text2: '#637777',
+    accent: '#82aaff', link: '#7fdbca',
+    border: '#1d3b53', input: '#0d2a3e', selection: '#1d3b53'
   },
-  onelight: {
-    name: 'One Light',
-    group: 'light',
-    bg: '#fafafa', bg2: '#f0f0f0', bg3: '#e5e5e5',
-    text: '#383a42', text2: '#9d9d9f',
-    accent: '#e45649', link: '#4078f2',
-    border: '#d3d3d3', input: '#f0f0f0', selection: '#e5e5e6'
-  }
+  ayu: {
+    name: 'Ayu Dark',
+    group: 'dark',
+    bg: '#0d1017', bg2: '#131721', bg3: '#080c11',
+    text: '#bfbdb6', text2: '#3d424d',
+    accent: '#e6b450', link: '#39bae6',
+    border: '#1a1f29', input: '#131721', selection: '#273747'
+  },
+  palenight: {
+    name: 'Palenight',
+    group: 'dark',
+    bg: '#292d3e', bg2: '#32374d', bg3: '#1c2030',
+    text: '#a6accd', text2: '#676e95',
+    accent: '#c792ea', link: '#89ddff',
+    border: '#4a5068', input: '#32374d', selection: '#4a5068'
+  },
+  synthwave: {
+    name: "Synthwave '84",
+    group: 'dark',
+    bg: '#262335', bg2: '#2a2139', bg3: '#1a1626',
+    text: '#ffffff', text2: '#848bbd',
+    accent: '#f97e72', link: '#36f9f6',
+    border: '#495495', input: '#2a2139', selection: '#495495'
+  },
 };
 
 window.READARK.buildThemeCSS = function(t) {
@@ -123,7 +137,7 @@ window.READARK.buildThemeCSS = function(t) {
   const skipDiv = host === 'docs.google.com' || host === 'sheets.google.com' ||
                   host === 'slides.google.com' || host === 'drive.google.com';
 
-  // :not(#readark-x) boosts specificity to (1,0,1), beating .class rules with !important
+  // :not(#readark-x) boosts specificity to (1,0,1+), beating app class selectors with !important
   const X = ':not(#readark-x)';
   const bgTags = [
     'section','article','aside','main','header','footer','nav','form',
@@ -172,6 +186,7 @@ ${X} select:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px ${t.input} inset !important;
   caret-color: ${t.text} !important;
 }
+::placeholder { color: ${t.text2} !important; opacity: 0.8 !important; }
 ${X} button, ${X} [role=button],
 ${X} input[type=submit], ${X} input[type=button], ${X} input[type=reset] {
   background-color: ${t.bg2} !important;
@@ -184,7 +199,9 @@ ${X} code, ${X} pre, ${X} kbd, ${X} samp {
   color: ${t.accent} !important;
   border-color: ${t.border} !important;
 }
-img, video, iframe, canvas, picture { filter: none !important; }
+img, video, iframe, canvas, picture, svg { filter: none !important; }
+${X} div:has(video) { background-color: transparent !important; }
+${X} div:has(video) > div { background-color: transparent !important; }
 ::selection { background-color: ${t.selection} !important; color: ${t.text} !important; }
 ::-webkit-scrollbar { background-color: ${t.bg2} !important; }
 ::-webkit-scrollbar-thumb { background-color: ${t.border} !important; border-radius: 4px !important; }

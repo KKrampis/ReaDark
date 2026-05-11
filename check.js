@@ -8,13 +8,11 @@ const removeTheme = () => {
 };
 
 const applyTheme = (themeKey) => {
-  if (!themeKey) { removeTheme(); return; }
   const themes = window.READARK && window.READARK.THEMES;
   const buildCSS = window.READARK && window.READARK.buildThemeCSS;
   if (!themes || !buildCSS) { removeTheme(); return; }
   const t = themes[themeKey];
   if (!t || !t.bg) { removeTheme(); return; }
-
   if (!_sheet) {
     _sheet = new CSSStyleSheet();
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, _sheet];
@@ -22,10 +20,30 @@ const applyTheme = (themeKey) => {
   _sheet.replaceSync(buildCSS(t));
 };
 
-chrome.storage.sync.get('theme', (d) => applyTheme(d.theme || ''));
+const refresh = (themeKey, disabledHosts) => {
+  const host = window.location.hostname;
+  if (themeKey && !(disabledHosts || []).includes(host)) {
+    applyTheme(themeKey);
+  } else {
+    removeTheme();
+  }
+};
+
+chrome.storage.sync.get('theme', (sd) => {
+  chrome.storage.local.get('disabledHosts', (ld) => {
+    refresh(sd.theme || '', ld.disabledHosts);
+  });
+});
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync' && changes.theme !== undefined) {
-    applyTheme(changes.theme.newValue || '');
+    chrome.storage.local.get('disabledHosts', (ld) => {
+      refresh(changes.theme.newValue || '', ld.disabledHosts);
+    });
+  }
+  if (area === 'local' && changes.disabledHosts !== undefined) {
+    chrome.storage.sync.get('theme', (sd) => {
+      refresh(sd.theme || '', changes.disabledHosts.newValue);
+    });
   }
 });
