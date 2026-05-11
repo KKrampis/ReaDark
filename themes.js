@@ -200,8 +200,7 @@ ${X} code, ${X} pre, ${X} kbd, ${X} samp {
   border-color: ${t.border} !important;
 }
 img, video, iframe, canvas, picture, svg { filter: none !important; }
-${X} div:has(video) { background-color: transparent !important; }
-${X} div:has(video) > div { background-color: transparent !important; }
+${X} div:has(video), ${X} div:has(video) div { background-color: transparent !important; }
 ::selection { background-color: ${t.selection} !important; color: ${t.text} !important; }
 ::-webkit-scrollbar { background-color: ${t.bg2} !important; }
 ::-webkit-scrollbar-thumb { background-color: ${t.border} !important; border-radius: 4px !important; }

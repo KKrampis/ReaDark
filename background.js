@@ -45,15 +45,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const globalBtn = document.getElementById('globalBtn');
   const pageBtn   = document.getElementById('pageBtn');
 
+  let _globalOn = false;
+
   const setGlobalBtn = (on) => {
+    _globalOn = on;
     globalBtn.textContent = on ? 'ON' : 'OFF';
     globalBtn.className = 'toggle-btn global-btn ' + (on ? 'on' : 'off');
   };
 
-  const setPageBtn = (on, globalOn) => {
-    pageBtn.textContent = on ? 'ON' : 'OFF';
-    pageBtn.className = 'toggle-btn page-btn ' + ((on && globalOn) ? 'on' : 'off');
-    pageBtn.disabled = !globalOn;
+  const setPageBtn = (pageOn) => {
+    pageBtn.textContent = pageOn ? 'ON' : 'OFF';
+    pageBtn.className = 'toggle-btn page-btn ' + ((pageOn && _globalOn) ? 'on' : 'off');
+    pageBtn.disabled = !_globalOn;
   };
 
   // ── Get tab + host ────────────────────────────────────────────
@@ -69,14 +72,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Load saved state ──────────────────────────────────────────
   chrome.storage.sync.get(['theme', 'savedTheme'], (sd) => {
-    const globalOn = !!sd.theme;
-    setGlobalBtn(globalOn);
+    setGlobalBtn(!!sd.theme);
     highlightTheme(sd.theme || sd.savedTheme || '');
 
     if (host) {
       chrome.storage.local.get('disabledHosts', (ld) => {
         const disabled = ld.disabledHosts || [];
-        setPageBtn(!disabled.includes(host), globalOn);
+        setPageBtn(!disabled.includes(host));
       });
     }
   });
@@ -100,21 +102,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // ── Per-page ON/OFF (reloads page) ────────────────────────────
-  if (host) {
-    pageBtn.addEventListener('click', () => {
-      chrome.storage.local.get('disabledHosts', (ld) => {
-        const disabled = ld.disabledHosts || [];
-        const isDisabled = disabled.includes(host);
-        const updated = isDisabled
-          ? disabled.filter(h => h !== host)
-          : [...disabled, host];
-        chrome.storage.local.set({ disabledHosts: updated }, () => {
-          chrome.tabs.reload(tabId);
-        });
-      });
+  // ── Per-page ON/OFF (live, no reload) ─────────────────────────
+  // onChanged in check.js handles the live CSS toggle when disabledHosts changes
+  pageBtn.addEventListener('click', () => {
+    if (!host || !_globalOn) return;
+    chrome.storage.local.get('disabledHosts', (ld) => {
+      const disabled = ld.disabledHosts || [];
+      const isDisabled = disabled.includes(host);
+      const updated = isDisabled
+        ? disabled.filter(h => h !== host)
+        : [...disabled, host];
+      // new pageOn = old isDisabled: was-disabled→now-ON, was-enabled→now-OFF
+      setPageBtn(isDisabled);
+      chrome.storage.local.set({ disabledHosts: updated });
     });
-  }
+  });
 
   // ── Theme selection (live, no reload) ─────────────────────────
   container.addEventListener('click', (e) => {
